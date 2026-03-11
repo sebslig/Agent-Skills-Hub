@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  validate-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip pyyaml skills-ref
+
+      - name: Validate all skills
+        run: python tests/smoke/validate_all_skills.py
+
+      - name: Validate pentest skills
+        run: python tests/smoke/validate_pentest_skills.py
+
+      - name: Run smoke tests
+        run: python tests/smoke/run_smoke.py
+
+      - name: Run pentest scenario tests
+        run: python tests/scenarios/test_pentest_skills.py
+
+      - name: Run bug bounty pentest scenarios
+        run: python tests/scenarios/test_pentest_bug_bounty_programs.py
+
+      - name: Run nmap pentest regression scenario
+        run: python tests/scenarios/test_nmap_pentest_scans_regression.py
+
+      - name: Run scenario tests
+        run: python tests/scenarios/run_agentic_scenarios.py
+
+      - name: Run Agent Skills reference checks
+        run: python tests/scenarios/run_agentskills_reference_checks.py
+
+      - name: Run security regression tests
+        run: python tests/security/run_security_regressions.py
+
+      - name: Package skills for Claude uploads
+        run: python tools/package_skills_for_claude.py --output artifacts/claude-zips
